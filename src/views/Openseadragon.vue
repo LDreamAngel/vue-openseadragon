@@ -51,7 +51,7 @@ export default {
       clearBeforeRedraw: true
     });
 
-    // console.log(444, this.overlay);
+    console.log(444, this.overlay);
 
     window.onresize = () => {
       this.overlay.resize();
@@ -85,6 +85,7 @@ export default {
         });
       }
       this.lesions = data;
+      // console.log(this.overlay.onRedraw);
       this.drawCanvas();
     },
 
@@ -114,6 +115,8 @@ export default {
         ctx.fillStyle = color;
         ctx.fill();
       }
+      this.overlay.resize();
+
     },
 
     // 过滤数组
