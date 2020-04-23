@@ -51,7 +51,7 @@ export default {
       clearBeforeRedraw: true
     });
 
-    console.log(444, this.overlay);
+    // console.log(444, this.overlay);
 
     window.onresize = () => {
       this.overlay.resize();
@@ -69,8 +69,6 @@ export default {
     isLayer(e, data) {
       let label = e.target.value;
       let chekBol = e.target.checked;
-      console.log(chekBol);
-      // console.log(data);
       if (!chekBol) {
         data.forEach(el => {
           if (el.label == label) {
@@ -85,16 +83,14 @@ export default {
         });
       }
       this.lesions = data;
-      // console.log(this.overlay.onRedraw);
       this.drawCanvas();
+      this.overlay._updateCanvas();
     },
 
     // 绘制图层
     drawCanvas() {
       let ctx = this.overlay.context2d();
       let lesions = this.lesions;
-      // console.log(lesions);
-      // console.log('drawCanvas');
       let s = 1 / 3;
       for (let i = 0; i < lesions.length; i++) {
         if (i == 0) continue;
@@ -110,13 +106,10 @@ export default {
           );
         }
         ctx.closePath();
-        // lesions[i].color[3] = 0.5;
         let color = "rgba(" + lesions[i].color + ")";
         ctx.fillStyle = color;
         ctx.fill();
       }
-      this.overlay.resize();
-
     },
 
     // 过滤数组
