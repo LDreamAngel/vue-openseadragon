@@ -85,7 +85,7 @@
             var boundsRect = this._viewer.viewport.getBoundsNoRotate(true);
             this._viewportOrigin.x = boundsRect.x;
             this._viewportOrigin.y = boundsRect.y * this.imgAspectRatio;
-
+            
             this._viewportWidth = boundsRect.width;
             this._viewportHeight = boundsRect.height * this.imgAspectRatio;
             var image1 = this._viewer.world.getItemAt(0);

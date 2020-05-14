@@ -2,9 +2,11 @@ import Vue from 'vue'
 // import axios from 'axios'
 import App from './App.vue'
 import router from './router'
-// import aaa from 'openseadragon'
-// console.log(111,aaa);
+import ElementUI from 'element-ui';
+import 'element-ui/lib/theme-chalk/index.css';
+
 Vue.config.productionTip = false
+Vue.use(ElementUI);
 
 new Vue({
   router,
