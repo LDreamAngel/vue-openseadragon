@@ -12,6 +12,7 @@
     "element-ui": "^2.13.1",
     "openseadragon": "^2.4.2",
     "vue": "^2.6.11",
+    "vue-cropper": "^0.5.2",
     "vue-router": "^3.1.6"
   },
   "devDependencies": {

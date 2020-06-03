@@ -26,11 +26,17 @@
             <el-slider
               v-model="zoom"
               :step="0.000001"
+              :min="0.000001"
               :max="5"
               @input="changeZoom()"
               vertical
               height="200px">
             </el-slider>
+          </div>
+           <!-- @click="saveImage" -->
+          <div class="btn">
+              <div class="el-icon-crop"></div>
+              <div>截图</div>
           </div>
           <div class="btn" @click="toggleMark()">
               <div class="el-icon-view"></div>
@@ -46,6 +52,16 @@
           <p>{{i.label}}</p>
         </li>
       </ul>
+
+       <!-- 截图 -->
+        <!-- <vueCropper
+            ref="cropper"
+            :img="cropperOption.img"
+            :outputType="cropperOption.outputType"
+            :autoCrop="cropperOption.autoCrop"
+            :autoCropWidth="cropperOption.autoCropWidth"
+            :autoCropHeight="cropperOption.autoCropHeight">
+        </vueCropper> -->
     </div>
   </div>
 </template>
@@ -56,8 +72,12 @@ import OpenSeadragon from "openseadragon";
 // import "../js/openseadragon-paperjs-overlay";
 import "../js/openseadragon-canvas-overlay";
 // import "../js/openseadragon-smartScrollZoom";
+import { VueCropper }  from 'vue-cropper' 
 export default {
   name: "Openseadragon",
+  components: {
+      VueCropper
+  },
   data() {
     return {
       winHeight: null,
@@ -82,7 +102,14 @@ export default {
       lesionsData: [],
       zoom:1,
       imageZoom:0,
-      num:0.5
+      num:0.5,
+      cropperOption: {
+          img: require("@/assets/image-small.jpg"),
+          outputType: 'png',
+          autoCrop: true,
+          autoCropWidth: 200,
+          autoCropHeight: 200
+      }
     };
   },
   created() {
