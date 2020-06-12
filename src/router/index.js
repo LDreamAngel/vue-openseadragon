@@ -1,6 +1,5 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Home from '../views/Home.vue'
 
 Vue.use(VueRouter)
 
@@ -8,7 +7,7 @@ Vue.use(VueRouter)
   {
     path: '/',
     name: 'Home',
-    component: Home
+    component: () => import(/* webpackChunkName: "about" */ '@/views/Home.vue')
   },
   {
     path: '/openseadragon',
@@ -16,15 +15,40 @@ Vue.use(VueRouter)
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/Openseadragon.vue')
+    component: () => import(/* webpackChunkName: "about" */ '@/views/Openseadragon.vue')
+  },
+  {
+    path: '/labelml',
+    name: 'Labelml',
+    redirect: { name: 'Fabric' },
+    component: () => import('@/views/labelml/index.vue'),
+    children: [
+        {
+            path: '/fabric',
+            name: 'Fabric',
+            component: () => import('@/views/labelml/Fabric.vue')
+        }
+        , {
+            path: '/labelHome',
+            name: 'LabelHome',
+            component: () => import('@/views/labelml/Home.vue')
+        }
+        // , {
+        //     path: '/labelEdit',
+        //     name: 'LabelEdit',
+        //     component: () => import('@/views/labelml/Editor.vue')
+        // }
+    ]
+  },
+  {
+    path: '/websocket',
+    name: 'Websocket',
+    component: () => import(/* webpackChunkName: "about" */ '@/views/Websocket.vue')
   },
   {
     path: '/cropper',
     name: 'Cropper',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/cropper.vue')
+    component: () => import(/* webpackChunkName: "about" */ '@/views/Cropper.vue')
   }
 ]
 
