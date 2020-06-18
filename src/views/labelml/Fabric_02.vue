@@ -6,7 +6,6 @@
       <li @click="delTarget()">删除</li>
     </ul>
     <canvas id="canvas" width="1000" height="600"></canvas>
-    <!-- <img src="@/assets/logo.png" alt="" id="img"> -->
   </div>
 </template>
 
@@ -43,10 +42,10 @@ export default {
       moveCount:1, //绘制移动计数器
       doDrawing:false, // 绘制状态
       delIndex:null,//删除目标
-      points:[],// 多变形线
-      polygonPoint:[],// 多边形
       pointArray:new Array(),
-      lineArray:new Array()
+      lineArray:new Array(),
+      activeLine:null,
+      activeShape:null,
     };
   },
   created() {
@@ -73,35 +72,12 @@ export default {
           this.mouseFrom.y = xy.y;
           // line多边形
           if(this.doDrawing && this.drawType =='polygon'){
-            this.canvas.skipTargetFind = true;
-            let circle = this.drawCircle(xy)
-
-            this.polygonPoint.push(xy)
-            let obj = this.polygonPoint[0];
-
-            if(this.points.length < 4){
-              this.points.push(xy.x,xy.y)
-              this.canvas.add(circle)
-              this.pointArray.push(circle)
-              this.drawing()
-              this.pointArray[0].set({fill:'red'})
-              this.canvas.renderAll();
-            }else{
-              this.points.splice(0,2)
-              if(this.pointInsideCircle(xy,obj,5)){
-                this.points.push(obj.x,obj.y)
-                let polygon = this.drawPolygon(this.polygonPoint)
-                this.canvas.add(polygon)
-                this.canvas.skipTargetFind = false;
-                this.delCL(this.pointArray,this.lineArray)
-              }else{
-                 this.points.push(xy.x,xy.y)
-                 this.canvas.add(circle)
-                 this.pointArray.push(circle)
-                 this.drawing()
-              }
+            if(options.target && options.target.id == this.pointArray[0].id){
+                this.generatePolygon(this.pointArray);
             }
-
+            if(this.doDrawing){
+              this.addPoint(options);
+            }
           }
         },
         "mouse:up": options => {
@@ -110,13 +86,24 @@ export default {
           this.mouseTo.y = xy.y;
           // 矩形
           if(this.doDrawing && this.drawType =='rectangle'){
-            this.drawing();
+            this.canvas.add(this.drawRect(this.mouseFrom,this.mouseTo))
           }
 
-          // if(this.doDrawing && this.drawType =='polygon'){
-          //   this.polygonPoint.push(xy)
-          //   this.drawing()
-          // }
+          if(this.activeLine && this.activeLine.class == "line"){
+                var pointer = canvas.getPointer(options.e);
+                this.activeLine.set({ x2: pointer.x, y2: pointer.y });
+
+                var points = this.activeShape.get("points");
+                points[this.pointArray.length] = {
+                    x:pointer.x,
+                    y:pointer.y
+                }
+                this.activeShape.set({
+                    points: points
+                });
+                this.canvas.renderAll();
+            }
+            this.canvas.renderAll();
         },
         'mouse:move': options => {},
         'selection:created': e => {
@@ -138,35 +125,6 @@ export default {
     transformMouse(mouseX, mouseY) {
       return { x: mouseX / window.zoom, y: mouseY / window.zoom };
     },
-    drawing(){
-        let fabricObject = null;
-         switch (this.drawType) {
-            case "rectangle": //矩形
-            fabricObject = this.drawRect(this.mouseFrom,this.mouseTo)
-            break;
-            case "polygon": //多边形的框
-            if(this.points.length>3){
-              fabricObject = this.drawLine(this.points)
-              this.lineArray.push(fabricObject)
-            }
-
-            // let item = this.canvas.item(0)
-            // if(item){
-            //   this.canvas.remove(item);
-            // }
-
-            // fabricObject = this.drawPolyline(this.polygonPoint)
-            break;
-          case "remove":
-            break;
-          default:
-            break;
-         }
-      if(fabricObject){
-        this.canvas.add(fabricObject)
-        // this.drawingObject = fabricObject;
-      }
-    },
     // 矩形
     drawRect(from,to){
       let path = `M ${from.x} ${from.y} L ${to.x} ${from.y} L ${to.x} ${to.y} L ${from.x} ${to.y} z`
@@ -187,6 +145,13 @@ export default {
     drawPolygon(arr){
       return new fabric.Polygon(arr, {
               fill: this.fillColor,
+              stroke:'#333333',
+              strokeWidth:1,
+              opacity: 0.3,
+              selectable: false,
+              hasBorders: false,
+              hasControls: false,
+              evented: false
             })
     },
     // 直线
@@ -196,35 +161,111 @@ export default {
               fill: this.color,
               stroke: this.color,
               strokeWidth: 1,
+              class:'line', 
+              originX:'center',
+              originY:'center',
               selectable: false,
               hasBorders: false,
               hasControls: false,
+              evented: false
             })
     },
     // 圆
     drawCircle(point){
       return new fabric.Circle({
-                radius: 5,
-                strokeWidth: 3,
-                left: point.x-6,
-                top: point.y-6,
-                fill: "green",
-                stroke: 'blick',
+              id:new Date().getTime(),
+              radius: 5,
+              fill: '#ffffff',
+              stroke: '#333333',
+              strokeWidth: 0.5,
+              left: (point.e.layerX/this.canvas.getZoom()),
+              top: (point.e.layerY/this.canvas.getZoom()),
               selectable: false,
               hasBorders: false,
               hasControls: false,
+              originX:'center',
+              originY:'center'
             });
     },
+
+    addPoint(options){
+       //画圈
+        var circle = this.drawCircle(options)
+        // 画第一个圈设置不同的颜色
+        if(this.pointArray.length == 0){
+            circle.set({
+                fill:'red'
+            })
+        }
+        //画线
+        var points = [(options.e.layerX/canvas.getZoom()),(options.e.layerY/canvas.getZoom()),(options.e.layerX/canvas.getZoom()),(options.e.layerY/canvas.getZoom())];
+        var line = this.drawLine(points)
+
+        if(this.activeShape){
+            var pos = this.canvas.getPointer(options.e);
+            var points = this.activeShape.get("points");
+            points.push({
+                x: pos.x,
+                y: pos.y
+            });
+            // 画多边形并获取当前的多边形
+            var polygon = this.drawPolygon(points);
+            this.canvas.remove(this.activeShape);
+            this.canvas.add(polygon);
+            this.activeShape = polygon;
+            this.canvas.renderAll();
+        } else{
+            // 画第一个多变形
+            var polyPoint = [{x:(options.e.layerX/canvas.getZoom()),y:(options.e.layerY/canvas.getZoom())}];
+            var polygon = this.drawPolygon(polyPoint);
+            this.activeShape = polygon;
+            canvas.add(polygon);
+        }
+        this.activeLine = line;
+
+        this.pointArray.push(circle);
+        this.lineArray.push(line);
+
+        this.canvas.add(line);
+        this.canvas.add(circle);
+        this.canvas.selection = false;
+    },
+    generatePolygon(pointArray){
+        var points = new Array();
+        pointArray.forEach(point => {
+          points.push({
+                x:point.left,
+                y:point.top
+            });
+            this.canvas.remove(point);
+        });
+        this.lineArray.forEach(line => {
+            this.canvas.remove(line);
+        });
+        this.canvas.remove(this.activeShape).remove(this.activeLine);
+        // 最终的多边形
+        var polygon = this.drawPolygon(points);
+        this.canvas.add(polygon);
+
+        this.activeLine = null;
+        this.activeShape = null;
+        this.doDrawing = false;
+        this.canvas.selection = true;
+    },
+
+
     // 获取要画的类型
     getType(type){
       this.doDrawing = true;
       this.drawType = type;
-      this.points = [];
-      this.polygonPoint = [];
+
+      this.polygonMode = null;
+      this.pointArray = new Array();
+      this.lineArray = new Array();
+      this.activeLine = null;
     },
     // 删除选中的图像
     delTarget(){
-      console.log(this.delIndex)
       if(this.delIndex){
         this.canvas.remove(this.delIndex);
       }else{
@@ -238,15 +279,13 @@ export default {
         var dy = circle.y- point.y
         return dx * dx + dy * dy <= r * r
     },
-    delCL(arr1,arr2){
-      arr1.forEach(point => {
+    delCL(){
+      this.pointArray.forEach(point => {
         this.canvas.remove(point);
       });
-      arr2.forEach(line => {
+      this.lineArray.forEach(line => {
         this.canvas.remove(line);
       });
-      this.polygonPoint = new Array();
-      this.pointArray = new Array();
     }
   }
 };

@@ -13,6 +13,12 @@
         body {
             overflow: hidden;
         }
+        a{
+          line-height: 50px;
+          font-size: 20px;
+          cursor:pointer;
+          border: solid 1px;
+        }
     </style>
     <script src="./jquery.min.js"></script>
     <script src="../Fabric/fabric.js"></script>
@@ -20,14 +26,15 @@
 <body>
     <nav class="grey darken-4" role="navigation" id = "nav-bar" style = "height:50px;">
         <div class="nav-wrapper container">
-          <a id="logo-container" class="brand-logo" style="line-height: 50px;font-size: 20px;">Fabric Polygon</a>
-          <ul id="nav-mobile" class="right hide-on-med-and-down">
-            <li><a id="create-polygon" style="line-height: 50px;font-size: 20px;cursor:pointer;">Create Polygon</a></li>
-          </ul>
+          <a id="logo-container" class="brand-logo">Fabric Polygon</a>
+          <a id="create-polygon" class="brand-logo">Create Polygon</a>
+          <!-- <ul id="nav-mobile" class="right hide-on-med-and-down">
+            <li><a id="create-polygon">Create Polygon</a></li>
+          </ul> -->
         </div>
       </nav>
       <div class="section no-pad-bot no-pad-top">
-        <canvas id = "c"></canvas>
+        <canvas id = "c"  width="1000" height="600"></canvas>
       </div>
 </body>
 <script src="./index.js"></script>

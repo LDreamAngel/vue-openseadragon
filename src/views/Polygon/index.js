@@ -10,11 +10,12 @@ var activeShape = false;
 var canvas
 $(window).load(function(){
     // 初始化画布并计算画布的宽高
-    canvas = window._canvas = new fabric.Canvas('c');
-    canvas.setWidth($(window).width());
-    canvas.setHeight($(window).height()-$('#nav-bar').height());
+    canvas = new fabric.Canvas('c');
+    // canvas.setWidth($(window).width());window._canvas =
+    // canvas.setHeight($(window).height()-$('#nav-bar').height());
     //canvas.selection = false;
     prototypefabric.initCanvas();
+    
     $('#create-polygon').click(function() {
         prototypefabric.polygon.drawPolygon(); 
     });
@@ -35,7 +36,7 @@ var prototypefabric = new function () {
             if(activeLine && activeLine.class == "line"){
                 var pointer = canvas.getPointer(options.e);
                 activeLine.set({ x2: pointer.x, y2: pointer.y });
-
+                console.log('activeShape',activeShape)
                 var points = activeShape.get("points");
                 points[pointArray.length] = {
                     x:pointer.x,
@@ -86,7 +87,7 @@ prototypefabric.polygon = {
         }
         //画线
         var points = [(options.e.layerX/canvas.getZoom()),(options.e.layerY/canvas.getZoom()),(options.e.layerX/canvas.getZoom()),(options.e.layerY/canvas.getZoom())];
-        line = new fabric.Line(points, {
+        var line = new fabric.Line(points, {
             strokeWidth: 2,
             fill: '#999999',
             stroke: '#999999',
@@ -148,7 +149,6 @@ prototypefabric.polygon = {
     },
     generatePolygon : function(pointArray){
         var points = new Array();
-        console.log(pointArray)
         $.each(pointArray,function(index,point){
             points.push({
                 x:point.left,
