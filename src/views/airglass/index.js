@@ -1,6 +1,7 @@
 // document.getElementById('app').innerHTML = `<div id="wrap" style="margin: 0 auto;"></div>
 //   <div id="clip" style="margin: 0 auto;background-image:url(tb.png);background-size:10%;"></div>`;
 
+// 画圈
 let Circle = airglass.extend(airglass.Renderable, {
   _constructor: function (params) {
     this.path = null;
@@ -22,6 +23,7 @@ let Circle = airglass.extend(airglass.Renderable, {
   }
 });
 
+// 画多边形
 let Polygon = airglass.extend(airglass.Renderable, {
   _constructor: function (params) {
     this.path = null;
@@ -82,6 +84,7 @@ getTwoImage(function (img1, img2) {
   let DPR = window.devicePixelRatio;
   let img1ResizeWidth = img1.width / img1.height * agHeight;
   let img2ResizeWidth = img2.width / img2.height * agHeight;
+  // 设置画布
   ag = new airglass.Airglass({
     element: document.querySelector('#wrap'),
     width: img1ResizeWidth + img2ResizeWidth,
@@ -96,6 +99,7 @@ getTwoImage(function (img1, img2) {
   ctx.drawImage(img1, 0, 0, img1ResizeWidth * DPR, agHeight * DPR);
   ctx.drawImage(img2, img1ResizeWidth * DPR, 0, img2ResizeWidth * DPR, agHeight * DPR);
 
+  // 裁剪
   clipAg = new airglass.Airglass({
     element: document.querySelector('#clip'),
     width: img1ResizeWidth + img2ResizeWidth,
@@ -361,7 +365,7 @@ function drawClip() {
     let maxY = max(ys);
     path = new Path2D;
     path.rect(minX, minY, maxX - minX, maxY - minY);
-    ctx.lineWidth = 2 * clipAg.DPR;
+    // ctx.lineWidth = 2 * clipAg.DPR;
     ctx.strokeStyle = currentColor;
     ctx.stroke(path);
     ctx.restore();
