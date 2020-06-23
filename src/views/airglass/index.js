@@ -56,15 +56,11 @@ let Polygon = airglass.extend(airglass.Renderable, {
 });
 
 let getTwoImage = function (cb) {
-  getImage(img1 => {
     getImage(img2 => {
-      cb(img1, img2);
+      cb(img2);
     }, [
       './assets/image-small.jpg'
     ]);
-  }, [
-    './assets/logo.png' 
-  ]);
 
   function getImage(cb, images) {
     let img = new Image;
@@ -76,37 +72,32 @@ let getTwoImage = function (cb) {
   }
 };
 
-let ag, imageRenderer, polygonRenderer, controllerRenderer,
-  clipAg, clipRenderer;
+let ag, imageRenderer, polygonRenderer, controllerRenderer;
 
-getTwoImage(function (img1, img2) {
+getTwoImage(function () {
+  let img2 = new Image;
+  img2.src = './assets/image-small.jpg'
+
   let agHeight = 300;
   let DPR = window.devicePixelRatio;
-  let img1ResizeWidth = img1.width / img1.height * agHeight;
   let img2ResizeWidth = img2.width / img2.height * agHeight;
   // 设置画布
   ag = new airglass.Airglass({
     element: document.querySelector('#wrap'),
-    width: img1ResizeWidth + img2ResizeWidth,
+    width: img2ResizeWidth,
     height: agHeight,
     DPR: DPR
   });
+  console.log(ag)
+  // 生成三种画布，分别为：承载图片的，绘制多边形，记录起始控制点
   imageRenderer = ag.addRenderer();
   polygonRenderer = ag.addRenderer();
   controllerRenderer = ag.addRenderer();
 
-  let ctx = imageRenderer.element.getContext('2d');
-  ctx.drawImage(img1, 0, 0, img1ResizeWidth * DPR, agHeight * DPR);
-  ctx.drawImage(img2, img1ResizeWidth * DPR, 0, img2ResizeWidth * DPR, agHeight * DPR);
 
-  // 裁剪
-  clipAg = new airglass.Airglass({
-    element: document.querySelector('#clip'),
-    width: img1ResizeWidth + img2ResizeWidth,
-    height: agHeight,
-    DPR: DPR
-  });
-  clipRenderer = clipAg.addRenderer();
+  // 添加图片
+  let ctx = imageRenderer.element.getContext('2d');
+  ctx.drawImage(img2,0, 0, img2ResizeWidth * DPR, agHeight * DPR);
 
   ag.subscribe(agSubscribe);
 });
@@ -133,12 +124,16 @@ let currentColor = 'hsl(0, 100%, 50%)';
 
 // controller拖拽控制点
 function agSubscribe(event, originEvent) {
+  // console.log('event',event)// 鼠标事件及位置
+  // console.log('originEvent',originEvent)// 详细信息
   originEvent.preventDefault();
   let type = event.type;
 
   let controllersContainPoint = controllerRenderer.getElementsContainPoint(event);
   let polygonsContainPoint = polygonRenderer.getElementsContainPoint(event);
 
+  // console.log(controllersContainPoint)
+  
   if (type == 'touchstart') {
     touchstart: {
       lastTouchstartPosition = [event.x, event.y];
@@ -172,7 +167,6 @@ function agSubscribe(event, originEvent) {
             polygonRenderer.reRender();
             controllerRenderer.reRender();
 
-            drawClip();
           }
         }
         break touchstart;
@@ -210,7 +204,7 @@ function agSubscribe(event, originEvent) {
         // 渲染
         controllerRenderer.reRender();
 
-        drawClip();
+        // drawClip();
         break touchstart;
       }
 
@@ -271,7 +265,6 @@ function agSubscribe(event, originEvent) {
       controllerRenderer.reRender();
       polygonRenderer.reRender();
 
-      drawClip();
     }
   }
 
@@ -300,7 +293,6 @@ function agSubscribe(event, originEvent) {
         polygonRenderer.reRender();
         controllerRenderer.reRender();
 
-        drawClip();
         break touchmove;
       }
 
@@ -320,7 +312,6 @@ function agSubscribe(event, originEvent) {
         _needUpdatePolygon.updatePath();
         polygonRenderer.reRender();
 
-        drawClip();
       }
     }
   }
@@ -333,43 +324,6 @@ function agSubscribe(event, originEvent) {
   }
 
   lastEventPosition = [event.x, event.y];
-}
-
-function drawClip() {
-  let waitDrawToClipPolygon = currentPolygon || activePolygon;
-  if (waitDrawToClipPolygon) {
-    let ctx = clipRenderer.element.getContext('2d');
-    ctx.save();
-    ctx.clearRect(0, 0, clipRenderer.element.width, clipRenderer.element.height);
-    let path = new Path2D;
-    let xs = [];
-    let ys = [];
-    for (let i = 0; i < waitDrawToClipPolygon.points.length; i++) {
-      let point = waitDrawToClipPolygon.points[i];
-      xs.push(point.x);
-      ys.push(point.y);
-      if (i == 0) {
-        path.moveTo(point.x, point.y);
-        continue;
-      }
-      path.lineTo(point.x, point.y);
-    }
-    ctx.clip(path);
-    ctx.drawImage(imageRenderer.element, 0, 0);
-    ctx.restore();
-
-    ctx.save();
-    let minX = min(xs);
-    let maxX = max(xs);
-    let minY = min(ys);
-    let maxY = max(ys);
-    path = new Path2D;
-    path.rect(minX, minY, maxX - minX, maxY - minY);
-    // ctx.lineWidth = 2 * clipAg.DPR;
-    ctx.strokeStyle = currentColor;
-    ctx.stroke(path);
-    ctx.restore();
-  }
 }
 
 function max(array) {

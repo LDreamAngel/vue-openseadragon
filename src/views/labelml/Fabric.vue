@@ -1,18 +1,68 @@
 <template>
   <div>
-    <h1>fabricjs</h1>
-    <ul>
-      <li v-for="i in tools" :key="i.type" @click="getType(i.type)">{{i.name}}</li>
-      <li @click="delTarget()">删除</li>
-    </ul>
-    <canvas id="canvas" width="1000" height="600"></canvas>
+    <h1 id="h1">airglass</h1>
+    <div id="wrap"></div>
+    <!-- <canvas id="canvas"></canvas> -->
   </div>
 </template>
 
 <script>
 import { fabric } from "fabric";
-import { Circle, Polygon } from "./airglass";
-// import "airglass";
+// import { Circle, Polygon } from "./airglass";
+// import "./airglass";
+// 画圈
+let Circle = airglass.extend(airglass.Renderable, {
+    _constructor: function (params) {
+      this.path = null;
+      this.x = params.x || 0;
+      this.y = params.y || 0;
+      this.size = params.size || 100;
+    },
+    updatePath: function () {
+      let path = new Path2D;
+      path.arc(this.x, this.y, this.size, 0, Math.PI * 2, true);
+      this.path = path;
+    },
+    draw: function (ctx) {
+      ctx.strokeStyle = this.stroke;
+      ctx.lineWidth = this.line;
+      ctx.fillStyle = this.fill;
+      ctx.fill(this.path);
+      ctx.stroke(this.path);
+    }
+  });
+  
+  // 画多边形
+  let Polygon = airglass.extend(airglass.Renderable, {
+    _constructor: function (params) {
+      this.path = null;
+      this.points = params.points || [];
+    },
+    updatePath: function () {
+      let path = new Path2D;
+      for (let i = 0; i < this.points.length; i++) {
+        let point = this.points[i];
+        if (i == 0) {
+          path.moveTo(point.x, point.y);
+          continue;
+        }
+        path.lineTo(point.x, point.y);
+      }
+      this.path = path;
+    },
+    addPoint: function (point) {
+      this.points.push(point);
+    },
+    draw: function (ctx) {
+      ctx.strokeStyle = this.stroke;
+      ctx.lineWidth = this.line;
+      ctx.fillStyle = this.fill;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.fill(this.path);
+      ctx.stroke(this.path);
+    }
+  });
 
 export default {
   name: "FabricBox",
@@ -37,40 +87,52 @@ export default {
         }
       ],
       canvas: null,
+      imageRenderer:null,
       polygonRenderer:null,
       controllerRenderer:null,
+
       preventDefault:null,
       lastEventPosition:null,
       lastTouchstartPosition:null,
       activeControllerPoint:null,
       activePolygon:null,
       currentPolygon:null,
+      activeControllerPointPositionWhenTouchstart:null,
+      currentGroupPoints:[],
+      isDrawingPolygon:false,
+      currentColor:'hsl(0, 100%, 50%)'
     };
   },
-  created() {},
+  created() {   },
   mounted() {
+     this.getData();
     this.initFabric();
+
   },
   methods: {
     initFabric() {
       let DPR = window.devicePixelRatio;
       this.canvas = new airglass.Airglass({
-        element: document.querySelector("#canvas"),
+        element: document.querySelector("#wrap"),
         width: 1000,
         height: 600,
         DPR: DPR
       });
+      console.log('canvas',this.canvas)
+
       this.polygonRenderer = this.canvas.addRenderer();
       this.controllerRenderer = this.canvas.addRenderer();
-      this.canvas.subscribe(this.agSubscribe);
+
+      this.canvas.subscribers.push(this.agSubscribe);
+      
     },
+
     agSubscribe(event, originEvent) {
+      // console.log(event)
       originEvent.preventDefault();
       let type = event.type;
 
-      let controllersContainPoint = this.controllerRenderer.getElementsContainPoint(
-        event
-      );
+      let controllersContainPoint = this.controllerRenderer.getElementsContainPoint(event);
       let polygonsContainPoint = this.polygonRenderer.getElementsContainPoint(event);
 
       if (type == "touchstart") {
@@ -85,7 +147,7 @@ export default {
             this.activeControllerPoint =
               controllersContainPoint[controllersContainPoint.length - 1];
             // 记录下激活中的控制点touchstart时的位置
-            activeControllerPointPositionWhenTouchstart = [
+            this.activeControllerPointPositionWhenTouchstart = [
               this.activeControllerPoint.x,
               this.activeControllerPoint.y
             ];
@@ -96,7 +158,7 @@ export default {
               if (this.activeControllerPoint === this.currentPolygon.points[0]) {
                 // 只执行一次
                 // 正在绘制多边形的状态设置为false
-                isDrawingPolygon = false;
+                this.isDrawingPolygon = false;
                 // 从外观上将多边形闭合
                 this.currentPolygon.addPoint(this.currentPolygon.points[0]);
                 this.currentPolygon.updatePath();
@@ -110,7 +172,7 @@ export default {
                 this.polygonRenderer.reRender();
                 this.controllerRenderer.reRender();
 
-                drawClip();
+                // drawClip();
               }
             }
             break touchstart;
@@ -123,33 +185,33 @@ export default {
               polygonsContainPoint[polygonsContainPoint.length - 1];
 
             // 将这个多边形置于渲染器的最顶层
-            polygonRenderer.scene.children.forEach((child, i) => {
+            this.polygonRenderer.scene.children.forEach((child, i) => {
               if (child == _activePolygon) {
-                polygonRenderer.scene.children.splice(i, 1);
-                polygonRenderer.scene.children.push(_activePolygon);
-                polygonRenderer.reRender();
+                this.polygonRenderer.scene.children.splice(i, 1);
+                this.polygonRenderer.scene.children.push(_activePolygon);
+                this.polygonRenderer.reRender();
 
                 // 击中的多边形已经完成闭合，即完成了绘制
                 if (_activePolygon.__isPathClosed) {
                   this.activePolygon = _activePolygon;
                   this.currentPolygon = null;
                   // 当前没有绘制多边形
-                  isDrawingPolygon = false;
+                  this.isDrawingPolygon = false;
                 } else {
                   // 击中的多边形未闭合，即未完成了绘制
                   this.currentPolygon = _activePolygon;
                   this.activePolygon = null;
                   // 当前在绘制多边形
-                  isDrawingPolygon = true;
+                  this.isDrawingPolygon = true;
                 }
-                controllerRenderer.scene.children = _activePolygon.points;
+                this.controllerRenderer.scene.children = _activePolygon.points;
               }
             });
 
             // 渲染
-            controllerRenderer.reRender();
+            this.controllerRenderer.reRender();
 
-            drawClip();
+            // drawClip();
             break touchstart;
           }
 
@@ -164,7 +226,7 @@ export default {
           });
 
           // 记录下激活中的控制点touchstart时的位置
-          activeControllerPointPositionWhenTouchstart = [
+          this.activeControllerPointPositionWhenTouchstart = [
             this.activeControllerPoint.x,
             this.activeControllerPoint.y
           ];
@@ -176,44 +238,44 @@ export default {
             this.currentPolygon.updatePath();
           } else {
             // 将新创建的激活中的控制点添加到临时的控制点组中
-            currentGroupPoints.push(this.activeControllerPoint);
+            this.currentGroupPoints.push(this.activeControllerPoint);
             // 控制点渲染器的场景中只显示正在绘制中的多边形的控制点
-            controllerRenderer.scene.children = currentGroupPoints;
+            this.controllerRenderer.scene.children = this.currentGroupPoints;
           }
           this.activeControllerPoint.updatePath();
 
-          if (currentGroupPoints.length == 1) {
-            isDrawingPolygon = true;
-            currentGroupPoints[0].fill = currentColor;
-            currentGroupPoints[0].line = 2 * ag.DPR;
+          if (this.currentGroupPoints.length == 1) {
+            this.isDrawingPolygon = true;
+            this.currentGroupPoints[0].fill = this.currentColor;
+            this.currentGroupPoints[0].line = 2 * this.canvas.DPR;
           }
 
           // 已经创建了第3个控制点
-          if (currentGroupPoints.length == 3) {
+          if (this.currentGroupPoints.length == 3) {
             // 当前正在绘制的多边形 = 新创建的多边形
-            let _fillStyle = currentColor.split("");
+            let _fillStyle = this.currentColor.split("");
             _fillStyle.splice(_fillStyle.length - 1, 0, ", 0.2");
             _fillStyle.splice(3, 0, "a");
 
             this.currentPolygon = new Polygon({
-              points: currentGroupPoints,
+              points: this.currentGroupPoints,
               fill: _fillStyle.join(""),
-              stroke: currentColor,
-              line: 4 * ag.DPR
+              stroke: this.currentColor,
+              line: 4 * this.canvas.DPR
             });
             this.currentPolygon.updatePath();
             // 激活中的多边形置为null
             this.activePolygon = null;
             // 清空临时控制点组
-            currentGroupPoints = [];
+            this.currentGroupPoints = [];
             // 向渲染多边形的渲染器场景中添加当前绘制的多边形
-            polygonRenderer.scene.add(this.currentPolygon);
+            this.polygonRenderer.scene.add(this.currentPolygon);
             // 渲染多边形
           }
-          controllerRenderer.reRender();
-          polygonRenderer.reRender();
+          this.controllerRenderer.reRender();
+          this.polygonRenderer.reRender();
 
-          drawClip();
+          // drawClip();
         }
       }
 
@@ -234,11 +296,11 @@ export default {
           if (this.activeControllerPoint) {
             // 给激活中的控制点设置新的拖拽后的位置
             this.activeControllerPoint.x =
-              activeControllerPointPositionWhenTouchstart[0] +
+              this.activeControllerPointPositionWhenTouchstart[0] +
               event.x -
               this.lastTouchstartPosition[0];
             this.activeControllerPoint.y =
-              activeControllerPointPositionWhenTouchstart[1] +
+              this.activeControllerPointPositionWhenTouchstart[1] +
               event.y -
               this.lastTouchstartPosition[1];
             this.activeControllerPoint.updatePath();
@@ -248,10 +310,10 @@ export default {
               _needUpdatePolygon.updatePath();
             }
             // 渲染
-            polygonRenderer.reRender();
-            controllerRenderer.reRender();
+            this.polygonRenderer.reRender();
+            this.controllerRenderer.reRender();
 
-            drawClip();
+            // drawClip();
             break touchmove;
           }
 
@@ -269,11 +331,11 @@ export default {
               point.y = point.y + offsetY;
               point.updatePath();
             }
-            controllerRenderer.reRender();
+            this.controllerRenderer.reRender();
             _needUpdatePolygon.updatePath();
-            polygonRenderer.reRender();
+            this.polygonRenderer.reRender();
 
-            drawClip();
+            // drawClip();
           }
         }
       }
