@@ -1,6 +1,7 @@
 <template>
   <div>
-    <h1 id="h1">airglass</h1>
+    <h1 id="h1"></h1>
+    <h2 @click="aaa()">1111</h2>
     <div id="wrap"></div>
     <!-- <canvas id="canvas"></canvas> -->
   </div>
@@ -63,7 +64,11 @@ let Circle = airglass.extend(airglass.Renderable, {
       ctx.stroke(this.path);
     }
   });
-
+   let ccc = {
+     a:function () {
+       console.log(222)
+     }
+    }
 export default {
   name: "FabricBox",
   data() {
@@ -348,6 +353,15 @@ export default {
       }
 
       this.lastEventPosition = [event.x, event.y];
+    },
+    getData(){
+        let h1 = document.getElementById('h1')
+        console.log(h1)
+        h1.innerHTML = `<span onclick = 'ccc.a()'>点击点击点击</span>`;
+
+    },
+    aaa(){
+      console.log(1111)
     }
   }
 };
