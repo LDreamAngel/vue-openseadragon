@@ -10,35 +10,9 @@ Vue.use(VueRouter)
     component: () => import(/* webpackChunkName: "about" */ '@/views/Home.vue')
   },
   {
-    path: '/openseadragon',
-    name: 'Openseadragon',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '@/views/Openseadragon.vue')
-  },
-  {
-    path: '/labelml',
-    name: 'Labelml',
-    redirect: { name: 'Fabric' },
-    component: () => import('@/views/labelml/index.vue'),
-    children: [
-        {
-            path: '/fabric',
-            name: 'Fabric',
-            component: () => import('@/views/labelml/Fabric.vue')
-        }
-        , {
-            path: '/labelHome',
-            name: 'LabelHome',
-            component: () => import('@/views/labelml/Home.vue')
-        }
-        // , {
-        //     path: '/labelEdit',
-        //     name: 'LabelEdit',
-        //     component: () => import('@/views/labelml/Editor.vue')
-        // }
-    ]
+    path: '/cropper',
+    name: 'Cropper',
+    component: () => import(/* webpackChunkName: "about" */ '@/views/Cropper.vue')
   },
   {
     path: '/websocket',
@@ -46,14 +20,43 @@ Vue.use(VueRouter)
     component: () => import(/* webpackChunkName: "about" */ '@/views/Websocket.vue')
   },
   {
-    path: '/cropper',
-    name: 'Cropper',
-    component: () => import(/* webpackChunkName: "about" */ '@/views/Cropper.vue')
+    path: '/openseadragon',
+    name: 'Openseadragon',
+    component: () => import(/* webpackChunkName: "about" */ '@/views/Openseadragon.vue')
+  },
+  {
+    path: '',
+    name: 'Labelml',
+    redirect: { name: 'Test' },
+    component: () => import(/* webpackChunkName: "Labelml" */ '@/views/labelml/index.vue'),
+    children: [
+        {
+            path: '/labelml/test',
+            name: 'Test',
+            component: () => import(/* webpackChunkName: "Labelml" */ '@/views/labelml/test.vue')
+        },{
+          path: '/labelml/fabric',
+          name: 'Fabric',
+          component: () => import(/* webpackChunkName: "Labelml" */ '@/views/labelml/Fabric.vue')
+        },{
+          path: '/labelml/editor',
+          name: 'Editor',
+          component: () => import(/* webpackChunkName: "Labelml" */ '@/views/labelml/Editor.vue')
+        },{
+          path: '/labelml/Fabric_polygon',
+          name: 'Fabric_Polygon',
+          component: () => import(/* webpackChunkName: "Labelml" */ '@/views/labelml/Fabric_polygon.vue')
+        },{
+          path: '/labelml/airglass',
+          name: 'Airglass',
+          component: () => import(/* webpackChunkName: "Labelml" */ '@/views/labelml/airglass.vue')
+        }
+    ]
   }
 ]
 
 const router = new VueRouter({
-  mode: 'history',
+  // mode: 'history',
   base: process.env.BASE_URL,
   linkActiveClass: 'active',
   routes

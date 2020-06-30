@@ -1,7 +1,7 @@
 <template>
   <div>
-    <h1>fabricjs</h1>
-    <canvas id="canvas" width="800" height="600"></canvas>
+    <h1>初识Fabricjs</h1>
+    <canvas id="canvas"></canvas>
     <!-- <img src="@/assets/logo.png" alt="" id="img"> -->
   </div>
 </template>
@@ -25,7 +25,7 @@ export default {
     };
   },
   created() {
-  },
+    },
   mounted() {
     this.initFabric()
   },
@@ -34,6 +34,10 @@ export default {
       // 用原生canvas元素创建一个fabric实例
       this.canvas = new fabric.Canvas("canvas");
       //var staticCanvas = new fabric.StaticCanvas('canvas');// 无交互的画布
+      let cWidth = (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth) - 250;
+      let cheight = (window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight) - 100;
+      this.canvas.setWidth(cWidth);
+      this.canvas.setHeight(cheight);
 
       // 创建一个矩形对象
       var rect = new fabric.Rect({
@@ -133,63 +137,6 @@ export default {
         duration: 1000,
         easing: fabric.util.ease.easeOutBounce //easeInCubic，easeOutCubic，easeInElastic，easeOutElastic，easeInBounce和easeOutExpo。
       });
-        //绑定画板事件
-        this.fabricObjAddEvent()
-    },
-    fabricObjAddEvent() {
-      this.canvas.on({
-        "mouse:down": o => {
-          console.log("mouse:down", o);
-          this.mouseFrom.x = o.pointer.x;
-          this.mouseFrom.y = o.pointer.y;
-          console.log(this.mouseFrom)
-        },
-        "mouse:up": o => {
-          console.log("mouse:up", o);
-          this.mouseTo.x = o.pointer.x;
-          this.mouseTo.y = o.pointer.y;
-          console.log(this.mouseTo)
-            this.drawRect();
-        },
-        'mouse:move': (o)=> {
-            // this.mouseTo.x = o.pointer.x;
-            // this.mouseTo.y = o.pointer.y;;
-        }
-      });
-    },
-    drawRect(){
-      let path =  "M " +
-              this.mouseFrom.x +
-              " " +
-              this.mouseFrom.y +
-              " L " +
-              this.mouseTo.x +
-              " " +
-              this.mouseFrom.y +
-              " L " +
-              this.mouseTo.x +
-              " " +
-              this.mouseTo.y +
-              " L " +
-              this.mouseFrom.x +
-              " " +
-              this.mouseTo.y +
-              " L " +
-              this.mouseFrom.x +
-              " " +
-              this.mouseFrom.y +
-              " z";
-              console.log(path)
-    let fabricObject =  new fabric.Path(path,{
-        left: this.mouseFrom.x,
-        top: this.mouseFrom.y,
-        stroke: 'blick',
-        fill:'rgba(124, 222, 211, 0)',
-        hoverCursor: "default"
-      });
-      if(fabricObject){
-        this.canvas.add(fabricObject)
-      }
     }
   }
 };

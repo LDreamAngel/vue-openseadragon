@@ -4,11 +4,11 @@ import App from './App.vue'
 import router from './router'
 import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
-import Vuetify from 'vuetify'
-import('../node_modules/vuetify/dist/vuetify.min.css')
+// import Vuetify from 'vuetify'
+// import('../node_modules/vuetify/dist/vuetify.min.css')
 
 Vue.config.productionTip = false
-Vue.use(ElementUI,Vuetify);
+Vue.use(ElementUI);
 
 new Vue({
   router,

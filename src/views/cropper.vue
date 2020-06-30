@@ -150,3 +150,12 @@
     }
 }
 </script>
+<style lang="scss" scope>
+    button{
+        width: 60px;
+        height: 30px;
+        margin-left: 15px;
+        border-radius: 4px;
+        border: solid 1px #eee;
+    }
+</style>

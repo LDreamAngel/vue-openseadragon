@@ -13,10 +13,10 @@
     "element-ui": "^2.13.1",
     "fabric": "^3.6.3",
     "openseadragon": "^2.4.2",
+    "paper": "^0.9.25",
     "vue": "^2.6.11",
     "vue-cropper": "^0.5.2",
-    "vue-router": "^3.1.6",
-    "vuetify": "^2.2.33"
+    "vue-router": "^3.1.6"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.3.0",

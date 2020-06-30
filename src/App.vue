@@ -1,23 +1,30 @@
 <template>
-  <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link>|
-      <router-link to="/openseadragon">Openseadragon</router-link>|
-      <router-link to="/cropper">cropper</router-link>|
-      <router-link to="/labelml">labelml</router-link>
+<div id="app">
+  <el-container style="height: 100%;">
+    <Side />
+    <div style="width:100%;">
+      <HeadBar />
+      <el-main>
+        <router-view />
+      </el-main>
     </div>
-    <router-view />
-  </div>
+  </el-container>
+</div>
 </template>
 <script>
+import HeadBar from "@/components/HeadBar.vue";
+import Side from "@/components/Side.vue";
+
 export default {
+  components: {
+    HeadBar,
+    Side
+  },
   data() {
     return {};
   },
-  created(){
-  },
-  methods: {
-  }
+  created() {},
+  methods: {}
 };
 </script>
 <style lang="scss">
@@ -38,18 +45,5 @@ body {
   text-align: center;
   color: #2c3e50;
   height: 100%;
-}
-
-#nav {
-  padding: 30px;
-
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
-    }
-  }
 }
 </style>

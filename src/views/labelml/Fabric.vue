@@ -1,367 +1,251 @@
 <template>
   <div>
-    <h1 id="h1"></h1>
-    <h2 @click="aaa()">1111</h2>
-    <div id="wrap"></div>
-    <!-- <canvas id="canvas"></canvas> -->
+    <h1>Fabric练习</h1>
+    <ul>
+      <li v-for="i in tools" :key="i.type" @click="getType(i.type)"><el-button size="mini" style="width:80px;">{{i.name}}</el-button></li>
+      <li @click="delTarget()"><el-button size="mini" style="width:80px;" type="danger">删除</el-button></li>
+    </ul>
+    <canvas id="canvas"></canvas>
   </div>
 </template>
 
 <script>
 import { fabric } from "fabric";
-// import { Circle, Polygon } from "./airglass";
-// import "./airglass";
-// 画圈
-let Circle = airglass.extend(airglass.Renderable, {
-    _constructor: function (params) {
-      this.path = null;
-      this.x = params.x || 0;
-      this.y = params.y || 0;
-      this.size = params.size || 100;
-    },
-    updatePath: function () {
-      let path = new Path2D;
-      path.arc(this.x, this.y, this.size, 0, Math.PI * 2, true);
-      this.path = path;
-    },
-    draw: function (ctx) {
-      ctx.strokeStyle = this.stroke;
-      ctx.lineWidth = this.line;
-      ctx.fillStyle = this.fill;
-      ctx.fill(this.path);
-      ctx.stroke(this.path);
-    }
-  });
-  
-  // 画多边形
-  let Polygon = airglass.extend(airglass.Renderable, {
-    _constructor: function (params) {
-      this.path = null;
-      this.points = params.points || [];
-    },
-    updatePath: function () {
-      let path = new Path2D;
-      for (let i = 0; i < this.points.length; i++) {
-        let point = this.points[i];
-        if (i == 0) {
-          path.moveTo(point.x, point.y);
-          continue;
-        }
-        path.lineTo(point.x, point.y);
-      }
-      this.path = path;
-    },
-    addPoint: function (point) {
-      this.points.push(point);
-    },
-    draw: function (ctx) {
-      ctx.strokeStyle = this.stroke;
-      ctx.lineWidth = this.line;
-      ctx.fillStyle = this.fill;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.fill(this.path);
-      ctx.stroke(this.path);
-    }
-  });
-   let ccc = {
-     a:function () {
-       console.log(222)
-     }
-    }
+
 export default {
   name: "FabricBox",
   data() {
     return {
-      tools: [
-        {
-          type: "rectangle",
-          name: "矩形"
-        },
-        {
-          type: "pen",
-          name: "画笔"
-        },
-        {
-          type: "polygon",
-          name: "多边形"
-        },
-        {
-          type: "text",
-          name: "文字"
-        }
-      ],
-      canvas: null,
-      imageRenderer:null,
-      polygonRenderer:null,
-      controllerRenderer:null,
+      tools:[{
+        type:'rectangle',
+        name:'矩形'
+      },{
+        type:'pen',
+        name:'画笔'
+      },{
+        type:'polygon',
+        name:'多边形'
+      },{
+        type:'text',
+        name:'文字'
+      }],
+      canvas:null,
+      mouseFrom:{},
+      mouseTo:{},
+      drawType:'rectangle',
+      drawWidth:2, //笔触宽度
+      color:'rgb(211, 118, 146)', //画笔颜色
+      fillColor:'rgba(0, 110, 255, 0.5)', // 填充颜色
 
-      preventDefault:null,
-      lastEventPosition:null,
-      lastTouchstartPosition:null,
-      activeControllerPoint:null,
-      activePolygon:null,
-      currentPolygon:null,
-      activeControllerPointPositionWhenTouchstart:null,
-      currentGroupPoints:[],
-      isDrawingPolygon:false,
-      currentColor:'hsl(0, 100%, 50%)'
+      doDrawing:false, // 绘制状态
+      delIndex:null,//删除目标
+      points:[],// 多变形线
+      polygonPoint:[],// 多边形
+      pointArray:new Array(),
+      lineArray:new Array()
     };
   },
-  created() {   },
+  created() {
+  },
   mounted() {
-     this.getData();
-    this.initFabric();
-
+    this.initFabric()
   },
   methods: {
     initFabric() {
-      let DPR = window.devicePixelRatio;
-      this.canvas = new airglass.Airglass({
-        element: document.querySelector("#wrap"),
-        width: 1000,
-        height: 600,
-        DPR: DPR
+      // 用原生canvas元素创建一个fabric实例
+      this.canvas = new fabric.Canvas("canvas");
+
+      let cWidth = (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth) - 250;
+      let cheight = (window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight) - 150;
+      this.canvas.setWidth(cWidth);
+      this.canvas.setHeight(cheight);
+
+      window.canvas = this.canvas;
+      window.zoom = window.zoom ? window.zoom : 1;
+      this.canvas.freeDrawingBrush.color = this.color; //设置自由绘颜色
+      this.canvas.freeDrawingBrush.width = this.drawWidth;
+
+      //绑定画板事件
+      this.fabricObjAddEvent()
+    },
+    fabricObjAddEvent() {
+      this.canvas.on({
+        "mouse:down": options => {
+          let xy = this.transformMouse(options.e.offsetX, options.e.offsetY);
+          this.mouseFrom.x = xy.x;
+          this.mouseFrom.y = xy.y;
+          // line多边形
+          if(this.doDrawing && this.drawType =='polygon'){
+            this.canvas.skipTargetFind = true;
+            let circle = this.drawCircle(xy)
+
+            this.polygonPoint.push(xy)
+            let obj = this.polygonPoint[0];
+
+            if(this.points.length < 4){
+              this.points.push(xy.x,xy.y)
+              this.canvas.add(circle)
+              this.pointArray.push(circle)
+              this.drawing()
+              this.pointArray[0].set({fill:'red'})
+              this.canvas.renderAll();
+            }else{
+              this.points.splice(0,2)
+              if(this.pointInsideCircle(xy,obj,5)){
+                this.points.push(obj.x,obj.y)
+                let polygon = this.drawPolygon(this.polygonPoint)
+                this.canvas.add(polygon)
+                this.canvas.skipTargetFind = false;
+                this.delCL(this.pointArray,this.lineArray)
+              }else{
+                 this.points.push(xy.x,xy.y)
+                 this.canvas.add(circle)
+                 this.pointArray.push(circle)
+                 this.drawing()
+              }
+            }
+
+          }
+        },
+        "mouse:up": options => {
+          let xy = this.transformMouse(options.e.offsetX, options.e.offsetY);
+          this.mouseTo.x = xy.x;
+          this.mouseTo.y = xy.y;
+          // 矩形
+          // if(this.doDrawing && this.drawType =='rectangle'){
+            this.drawing();
+          // }
+        },
+        'mouse:move': options => {},
+        'selection:created': e => {
+          this.doDrawing = false;
+          this.delIndex = e.target;
+        },
       });
-      console.log('canvas',this.canvas)
-
-      this.polygonRenderer = this.canvas.addRenderer();
-      this.controllerRenderer = this.canvas.addRenderer();
-
-      this.canvas.subscribers.push(this.agSubscribe);
-      
     },
-
-    agSubscribe(event, originEvent) {
-      // console.log(event)
-      originEvent.preventDefault();
-      let type = event.type;
-
-      let controllersContainPoint = this.controllerRenderer.getElementsContainPoint(event);
-      let polygonsContainPoint = this.polygonRenderer.getElementsContainPoint(event);
-
-      if (type == "touchstart") {
-        touchstart: {
-          this.lastTouchstartPosition = [event.x, event.y];
-          // 初始化上次事件位置
-          !this.lastEventPosition && (this.lastEventPosition = [event.x, event.y]);
-
-          // 落在任意控制点上
-          if (controllersContainPoint.length) {
-            // 激活中的控制点 = 最上面的控制点
-            this.activeControllerPoint =
-              controllersContainPoint[controllersContainPoint.length - 1];
-            // 记录下激活中的控制点touchstart时的位置
-            this.activeControllerPointPositionWhenTouchstart = [
-              this.activeControllerPoint.x,
-              this.activeControllerPoint.y
-            ];
-            // 当前正在绘制多边形，还没有闭合多边形
-            if (this.currentPolygon) {
-              this.activePolygon = null;
-              // 如果该控制点就是当前正在绘制的polygon的第一个控制点
-              if (this.activeControllerPoint === this.currentPolygon.points[0]) {
-                // 只执行一次
-                // 正在绘制多边形的状态设置为false
-                this.isDrawingPolygon = false;
-                // 从外观上将多边形闭合
-                this.currentPolygon.addPoint(this.currentPolygon.points[0]);
-                this.currentPolygon.updatePath();
-                // 设置一个标志，说明多边形已经闭合
-                this.currentPolygon.__isPathClosed = true;
-                // 清除激活中的多边形
-                this.activePolygon = this.currentPolygon;
-                // 结束绘制，清除当前正在绘制的多边形
-                this.currentPolygon = null;
-                // 重新渲染
-                this.polygonRenderer.reRender();
-                this.controllerRenderer.reRender();
-
-                // drawClip();
-              }
+    transformMouse(mouseX, mouseY) {
+      return { x: mouseX / window.zoom, y: mouseY / window.zoom };
+    },
+    drawing(){
+        let fabricObject = null;
+         switch (this.drawType) {
+            case "rectangle": //矩形
+            fabricObject = this.drawRect(this.mouseFrom,this.mouseTo)
+            break;
+            case "polygon": //多边形的框
+            if(this.points.length>3){
+              fabricObject = this.drawLine(this.points)
+              this.lineArray.push(fabricObject)
             }
-            break touchstart;
-          }
-
-          // 落在任意多边形上
-          if (polygonsContainPoint.length) {
-            // 第一个击中的多边形
-            let _activePolygon =
-              polygonsContainPoint[polygonsContainPoint.length - 1];
-
-            // 将这个多边形置于渲染器的最顶层
-            this.polygonRenderer.scene.children.forEach((child, i) => {
-              if (child == _activePolygon) {
-                this.polygonRenderer.scene.children.splice(i, 1);
-                this.polygonRenderer.scene.children.push(_activePolygon);
-                this.polygonRenderer.reRender();
-
-                // 击中的多边形已经完成闭合，即完成了绘制
-                if (_activePolygon.__isPathClosed) {
-                  this.activePolygon = _activePolygon;
-                  this.currentPolygon = null;
-                  // 当前没有绘制多边形
-                  this.isDrawingPolygon = false;
-                } else {
-                  // 击中的多边形未闭合，即未完成了绘制
-                  this.currentPolygon = _activePolygon;
-                  this.activePolygon = null;
-                  // 当前在绘制多边形
-                  this.isDrawingPolygon = true;
-                }
-                this.controllerRenderer.scene.children = _activePolygon.points;
-              }
+            break;
+          case "text":
+            fabricObject = this.drawText(this.mouseFrom)
+            fabricObject.enterEditing();
+            fabricObject.hiddenTextarea.focus();
+            break;
+          case "remove":
+            break;
+          default:
+            break;
+         }
+      if(fabricObject){
+        this.canvas.add(fabricObject)
+      }
+    },
+    // 矩形
+    drawRect(from,to){
+      let path = `M ${from.x} ${from.y} L ${to.x} ${from.y} L ${to.x} ${to.y} L ${from.x} ${to.y} z`
+      return new fabric.Path(path,{
+              stroke: this.color,
+              fill: this.fillColor,
+              strokeWidth: this.drawWidth
             });
-
-            // 渲染
-            this.controllerRenderer.reRender();
-
-            // drawClip();
-            break touchstart;
-          }
-
-          // 既没有落在控制点 && 也没有落在多边形上
-
-          // 激活中的控制点 = 新创建的控制点
-          this.activeControllerPoint = new Circle({
-            x: event.x,
-            y: event.y,
-            size: 8 * this.canvas.DPR,
-            stroke: "transparent"
-          });
-
-          // 记录下激活中的控制点touchstart时的位置
-          this.activeControllerPointPositionWhenTouchstart = [
-            this.activeControllerPoint.x,
-            this.activeControllerPoint.y
-          ];
-
-          // 如果存在当前正在绘制的
-          if (this.currentPolygon) {
-            // 将新创建的控制点添加到当前正在绘制的多边形中
-            this.currentPolygon.addPoint(this.activeControllerPoint);
-            this.currentPolygon.updatePath();
-          } else {
-            // 将新创建的激活中的控制点添加到临时的控制点组中
-            this.currentGroupPoints.push(this.activeControllerPoint);
-            // 控制点渲染器的场景中只显示正在绘制中的多边形的控制点
-            this.controllerRenderer.scene.children = this.currentGroupPoints;
-          }
-          this.activeControllerPoint.updatePath();
-
-          if (this.currentGroupPoints.length == 1) {
-            this.isDrawingPolygon = true;
-            this.currentGroupPoints[0].fill = this.currentColor;
-            this.currentGroupPoints[0].line = 2 * this.canvas.DPR;
-          }
-
-          // 已经创建了第3个控制点
-          if (this.currentGroupPoints.length == 3) {
-            // 当前正在绘制的多边形 = 新创建的多边形
-            let _fillStyle = this.currentColor.split("");
-            _fillStyle.splice(_fillStyle.length - 1, 0, ", 0.2");
-            _fillStyle.splice(3, 0, "a");
-
-            this.currentPolygon = new Polygon({
-              points: this.currentGroupPoints,
-              fill: _fillStyle.join(""),
-              stroke: this.currentColor,
-              line: 4 * this.canvas.DPR
+    },
+    // 折线
+    drawPolyline(arr){
+      return new fabric.Polyline(arr, {
+              stroke: this.color,
+              fill: this.fillColor,
+            })
+    },
+    // 多边形
+    drawPolygon(arr){
+      return new fabric.Polygon(arr, {
+              fill: this.fillColor,
+            })
+    },
+    // 直线
+    drawLine(arr){
+      return new fabric.Line(arr,{
+              id:new Date().getTime(),
+              fill: this.color,
+              stroke: this.color,
+              strokeWidth: 1,
+              selectable: false,
+              hasBorders: false,
+              hasControls: false,
+            })
+    },
+    // 圆
+    drawCircle(point){
+      return new fabric.Circle({
+                radius: 5,
+                strokeWidth: 3,
+                left: point.x-6,
+                top: point.y-6,
+                fill: "green",
+                stroke: 'blick',
+              selectable: false,
+              hasBorders: false,
+              hasControls: false,
             });
-            this.currentPolygon.updatePath();
-            // 激活中的多边形置为null
-            this.activePolygon = null;
-            // 清空临时控制点组
-            this.currentGroupPoints = [];
-            // 向渲染多边形的渲染器场景中添加当前绘制的多边形
-            this.polygonRenderer.scene.add(this.currentPolygon);
-            // 渲染多边形
-          }
-          this.controllerRenderer.reRender();
-          this.polygonRenderer.reRender();
-
-          // drawClip();
-        }
-      }
-
-      if (type == "touchmove") {
-        touchmove: {
-          // 移除重复的拖拽事件
-          if (
-            this.lastEventPosition[0] == event.x &&
-            this.lastEventPosition[1] == event.y
-          ) {
-            break touchmove;
-          }
-
-          // 需要更新绘制激活中状态的多边形，则使用activePolygon
-          // 需要更新绘制正在绘制中的多边形，则使用currentPolygon
-          let _needUpdatePolygon = this.activePolygon || this.currentPolygon;
-          // 优先拖拽控制点
-          if (this.activeControllerPoint) {
-            // 给激活中的控制点设置新的拖拽后的位置
-            this.activeControllerPoint.x =
-              this.activeControllerPointPositionWhenTouchstart[0] +
-              event.x -
-              this.lastTouchstartPosition[0];
-            this.activeControllerPoint.y =
-              this.activeControllerPointPositionWhenTouchstart[1] +
-              event.y -
-              this.lastTouchstartPosition[1];
-            this.activeControllerPoint.updatePath();
-            // 如果存在上方描述的两种多边形
-            if (_needUpdatePolygon) {
-              // 渲染需要更新绘制路径的多边形
-              _needUpdatePolygon.updatePath();
-            }
-            // 渲染
-            this.polygonRenderer.reRender();
-            this.controllerRenderer.reRender();
-
-            // drawClip();
-            break touchmove;
-          }
-
-          // 拖拽多边形
-          if (_needUpdatePolygon) {
-            let offsetX = event.x - this.lastEventPosition[0];
-            let offsetY = event.y - this.lastEventPosition[1];
-
-            let pointsLength = _needUpdatePolygon.__isPathClosed
-              ? _needUpdatePolygon.points.length - 1
-              : _needUpdatePolygon.points.length;
-            for (let i = 0; i < pointsLength; i++) {
-              let point = _needUpdatePolygon.points[i];
-              point.x = point.x + offsetX;
-              point.y = point.y + offsetY;
-              point.updatePath();
-            }
-            this.controllerRenderer.reRender();
-            _needUpdatePolygon.updatePath();
-            this.polygonRenderer.reRender();
-
-            // drawClip();
-          }
-        }
-      }
-
-      if (type == "touchend") {
-        touchend: {
-          // 清除激活中的控制点
-          this.activeControllerPoint = null;
-        }
-      }
-
-      this.lastEventPosition = [event.x, event.y];
     },
-    getData(){
-        let h1 = document.getElementById('h1')
-        console.log(h1)
-        h1.innerHTML = `<span onclick = 'ccc.a()'>点击点击点击</span>`;
-
+    // 文字
+    drawText(point){
+      return new fabric.Textbox("",{
+            left: point.x - 60,
+            top: point.y - 20,
+            width: 150,
+            fontSize: 18,
+            borderColor: "#2c2c2c",
+            fill: this.color,
+            hasControls: false
+            });
     },
-    aaa(){
-      console.log(1111)
+    // 获取要画的类型
+    getType(type){
+      this.doDrawing = true;
+      this.drawType = type;
+      this.points = [];
+      this.polygonPoint = [];
+      this.polygonPoint = new Array();
+      this.pointArray = new Array();
+    },
+    // 删除选中的图像
+    delTarget(){
+      if(this.delIndex){
+        this.canvas.remove(this.delIndex);
+      }else{
+        this.$message.warning('请先选择要删除的图像');
+      }
+    },
+    // 判断是否闭合成了一个多边形
+    pointInsideCircle(point, circle, r) {
+        if (r===0) return false
+        var dx = circle.x - point.x
+        var dy = circle.y- point.y
+        return dx * dx + dy * dy <= r * r
+    },
+    // 绘制完成多边形后删除多余的点和线
+    delCL(arr1,arr2){
+      arr1.forEach(point => {
+        this.canvas.remove(point);
+      });
+      arr2.forEach(line => {
+        this.canvas.remove(line);
+      });
+      this.polygonPoint = new Array();
+      this.pointArray = new Array();
     }
   }
 };
@@ -371,7 +255,13 @@ export default {
 #canvas {
   border: solid 1px;
 }
-ul li {
-  cursor: pointer;
+ul{
+  position: absolute;
+  z-index: 10;
+}
+ul li{
+  width: 100px;
+  margin-top: 10px;
+  list-style: none;
 }
 </style>
