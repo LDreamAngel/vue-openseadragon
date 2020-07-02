@@ -2,8 +2,12 @@
   <div>
     <h1>Fabric练习</h1>
     <ul>
-      <li v-for="i in tools" :key="i.type" @click="getType(i.type)"><el-button size="mini" style="width:80px;">{{i.name}}</el-button></li>
-      <li @click="delTarget()"><el-button size="mini" style="width:80px;" type="danger">删除</el-button></li>
+      <li v-for="i in tools" :key="i.type" @click="getType(i.type)">
+        <el-button size="mini" style="width:80px;">{{i.name}}</el-button>
+      </li>
+      <li @click="delTarget()">
+        <el-button size="mini" style="width:80px;" type="danger">删除</el-button>
+      </li>
     </ul>
     <canvas id="canvas"></canvas>
   </div>
@@ -16,39 +20,43 @@ export default {
   name: "FabricBox",
   data() {
     return {
-      tools:[{
-        type:'rectangle',
-        name:'矩形'
-      },{
-        type:'pen',
-        name:'画笔'
-      },{
-        type:'polygon',
-        name:'多边形'
-      },{
-        type:'text',
-        name:'文字'
-      }],
-      canvas:null,
-      mouseFrom:{},
-      mouseTo:{},
-      drawType:'rectangle',
-      drawWidth:2, //笔触宽度
-      color:'rgb(211, 118, 146)', //画笔颜色
-      fillColor:'rgba(0, 110, 255, 0.5)', // 填充颜色
+      tools: [
+        {
+          type: "rectangle",
+          name: "矩形"
+        },
+        {
+          type: "pen",
+          name: "画笔"
+        },
+        {
+          type: "polygon",
+          name: "多边形"
+        },
+        {
+          type: "text",
+          name: "文字"
+        }
+      ],
+      canvas: null,
+      mouseFrom: {},
+      mouseTo: {},
+      drawType: "rectangle",
+      drawWidth: 2, //笔触宽度
+      color: "rgb(211, 118, 146)", //画笔颜色
+      fillColor: "rgba(0, 110, 255, 0.5)", // 填充颜色
 
-      doDrawing:false, // 绘制状态
-      delIndex:null,//删除目标
-      points:[],// 多变形线
-      polygonPoint:[],// 多边形
-      pointArray:new Array(),
-      lineArray:new Array()
+      doDrawing: false, // 绘制状态
+      delIndex: null, //删除目标
+      points: [], // 多变形线
+      polygonPoint: [], // 多边形
+      pointArray: new Array(),
+      lineArray: new Array()
     };
   },
-  created() {
-  },
+  created() {},
   mounted() {
-    this.initFabric()
+    this.initFabric();
   },
   methods: {
     initFabric() {
@@ -66,7 +74,7 @@ export default {
       this.canvas.freeDrawingBrush.width = this.drawWidth;
 
       //绑定画板事件
-      this.fabricObjAddEvent()
+      this.fabricObjAddEvent();
     },
     fabricObjAddEvent() {
       this.canvas.on({
@@ -75,145 +83,144 @@ export default {
           this.mouseFrom.x = xy.x;
           this.mouseFrom.y = xy.y;
           // line多边形
-          if(this.doDrawing && this.drawType =='polygon'){
-            this.canvas.skipTargetFind = true;
-            let circle = this.drawCircle(xy)
-
-            this.polygonPoint.push(xy)
-            let obj = this.polygonPoint[0];
-
-            if(this.points.length < 4){
-              this.points.push(xy.x,xy.y)
-              this.canvas.add(circle)
-              this.pointArray.push(circle)
-              this.drawing()
-              this.pointArray[0].set({fill:'red'})
-              this.canvas.renderAll();
-            }else{
-              this.points.splice(0,2)
-              if(this.pointInsideCircle(xy,obj,5)){
-                this.points.push(obj.x,obj.y)
-                let polygon = this.drawPolygon(this.polygonPoint)
-                this.canvas.add(polygon)
-                this.canvas.skipTargetFind = false;
-                this.delCL(this.pointArray,this.lineArray)
-              }else{
-                 this.points.push(xy.x,xy.y)
-                 this.canvas.add(circle)
-                 this.pointArray.push(circle)
-                 this.drawing()
-              }
-            }
-
+          if (this.doDrawing && this.drawType == "polygon") {
+            this.getPoint(xy)
           }
         },
         "mouse:up": options => {
           let xy = this.transformMouse(options.e.offsetX, options.e.offsetY);
           this.mouseTo.x = xy.x;
           this.mouseTo.y = xy.y;
-          // 矩形
-          // if(this.doDrawing && this.drawType =='rectangle'){
-            this.drawing();
-          // }
+          this.drawing();
         },
-        'mouse:move': options => {},
-        'selection:created': e => {
+        "mouse:move": options => {},
+        "selection:created": e => {
           this.doDrawing = false;
           this.delIndex = e.target;
-        },
+        }
       });
     },
     transformMouse(mouseX, mouseY) {
       return { x: mouseX / window.zoom, y: mouseY / window.zoom };
     },
-    drawing(){
-        let fabricObject = null;
-         switch (this.drawType) {
-            case "rectangle": //矩形
-            fabricObject = this.drawRect(this.mouseFrom,this.mouseTo)
-            break;
-            case "polygon": //多边形的框
-            if(this.points.length>3){
-              fabricObject = this.drawLine(this.points)
-              this.lineArray.push(fabricObject)
-            }
-            break;
-          case "text":
-            fabricObject = this.drawText(this.mouseFrom)
-            fabricObject.enterEditing();
-            fabricObject.hiddenTextarea.focus();
-            break;
-          case "remove":
-            break;
-          default:
-            break;
-         }
-      if(fabricObject){
-        this.canvas.add(fabricObject)
+    drawing() {
+      let fabricObject = null;
+      switch (this.drawType) {
+        case "rectangle": //矩形
+          fabricObject = this.drawRect(this.mouseFrom, this.mouseTo);
+          break;
+        case "polygon": //多边形的框
+          if (this.points.length > 3) {
+            fabricObject = this.drawLine(this.points);
+            this.lineArray.push(fabricObject);
+          }
+          break;
+        case "text":
+          fabricObject = this.drawText(this.mouseFrom);
+          fabricObject.enterEditing();
+          fabricObject.hiddenTextarea.focus();
+          break;
+        case "remove":
+          break;
+        default:
+          break;
+      }
+      if (fabricObject) {
+        this.canvas.add(fabricObject);
       }
     },
     // 矩形
-    drawRect(from,to){
-      let path = `M ${from.x} ${from.y} L ${to.x} ${from.y} L ${to.x} ${to.y} L ${from.x} ${to.y} z`
-      return new fabric.Path(path,{
-              stroke: this.color,
-              fill: this.fillColor,
-              strokeWidth: this.drawWidth
-            });
+    drawRect(from, to) {
+      let path = `M ${from.x} ${from.y} L ${to.x} ${from.y} L ${to.x} ${to.y} L ${from.x} ${to.y} z`;
+      return new fabric.Path(path, {
+        stroke: this.color,
+        fill: this.fillColor,
+        strokeWidth: this.drawWidth
+      });
     },
     // 折线
-    drawPolyline(arr){
+    drawPolyline(arr) {
       return new fabric.Polyline(arr, {
-              stroke: this.color,
-              fill: this.fillColor,
-            })
+        stroke: this.color,
+        fill: this.fillColor
+      });
     },
     // 多边形
-    drawPolygon(arr){
+    drawPolygon(arr) {
       return new fabric.Polygon(arr, {
-              fill: this.fillColor,
-            })
+        fill: this.fillColor
+      });
     },
     // 直线
-    drawLine(arr){
-      return new fabric.Line(arr,{
-              id:new Date().getTime(),
-              fill: this.color,
-              stroke: this.color,
-              strokeWidth: 1,
-              selectable: false,
-              hasBorders: false,
-              hasControls: false,
-            })
+    drawLine(arr) {
+      return new fabric.Line(arr, {
+        id: new Date().getTime(),
+        fill: this.color,
+        stroke: this.color,
+        strokeWidth: 1,
+        selectable: false,
+        hasBorders: false,
+        hasControls: false
+      });
     },
     // 圆
-    drawCircle(point){
+    drawCircle(point) {
       return new fabric.Circle({
-                radius: 5,
-                strokeWidth: 3,
-                left: point.x-6,
-                top: point.y-6,
-                fill: "green",
-                stroke: 'blick',
-              selectable: false,
-              hasBorders: false,
-              hasControls: false,
-            });
+        radius: 5,
+        strokeWidth: 3,
+        left: point.x - 6,
+        top: point.y - 6,
+        fill: "green",
+        stroke: "blick",
+        selectable: false,
+        hasBorders: false,
+        hasControls: false
+      });
     },
     // 文字
-    drawText(point){
-      return new fabric.Textbox("",{
-            left: point.x - 60,
-            top: point.y - 20,
-            width: 150,
-            fontSize: 18,
-            borderColor: "#2c2c2c",
-            fill: this.color,
-            hasControls: false
-            });
+    drawText(point) {
+      return new fabric.Textbox("", {
+        left: point.x - 60,
+        top: point.y - 20,
+        width: 150,
+        fontSize: 18,
+        borderColor: "#2c2c2c",
+        fill: this.color,
+        hasControls: false
+      });
+    },
+    getPoint(xy) {
+      this.canvas.skipTargetFind = true;
+      let circle = this.drawCircle(xy);
+
+      this.polygonPoint.push(xy);
+      let obj = this.polygonPoint[0];
+
+      if (this.points.length < 4) {
+        this.points.push(xy.x, xy.y);
+        this.canvas.add(circle);
+        this.pointArray.push(circle);
+        this.drawing();
+        this.pointArray[0].set({ fill: "red" });
+        this.canvas.renderAll();
+      } else {
+        this.points.splice(0, 2);
+        if (this.pointInsideCircle(xy, obj, 5)) {
+          this.points.push(obj.x, obj.y);
+          let polygon = this.drawPolygon(this.polygonPoint);
+          this.canvas.add(polygon);
+          this.canvas.skipTargetFind = false;
+          this.delCL(this.pointArray, this.lineArray);
+        } else {
+          this.points.push(xy.x, xy.y);
+          this.canvas.add(circle);
+          this.pointArray.push(circle);
+          this.drawing();
+        }
+      }
     },
     // 获取要画的类型
-    getType(type){
+    getType(type) {
       this.doDrawing = true;
       this.drawType = type;
       this.points = [];
@@ -222,22 +229,22 @@ export default {
       this.pointArray = new Array();
     },
     // 删除选中的图像
-    delTarget(){
-      if(this.delIndex){
+    delTarget() {
+      if (this.delIndex) {
         this.canvas.remove(this.delIndex);
-      }else{
-        this.$message.warning('请先选择要删除的图像');
+      } else {
+        this.$message.warning("请先选择要删除的图像");
       }
     },
     // 判断是否闭合成了一个多边形
     pointInsideCircle(point, circle, r) {
-        if (r===0) return false
-        var dx = circle.x - point.x
-        var dy = circle.y- point.y
-        return dx * dx + dy * dy <= r * r
+      if (r === 0) return false;
+      var dx = circle.x - point.x;
+      var dy = circle.y - point.y;
+      return dx * dx + dy * dy <= r * r;
     },
     // 绘制完成多边形后删除多余的点和线
-    delCL(arr1,arr2){
+    delCL(arr1, arr2) {
       arr1.forEach(point => {
         this.canvas.remove(point);
       });
@@ -255,11 +262,11 @@ export default {
 #canvas {
   border: solid 1px;
 }
-ul{
+ul {
   position: absolute;
   z-index: 10;
 }
-ul li{
+ul li {
   width: 100px;
   margin-top: 10px;
   list-style: none;
