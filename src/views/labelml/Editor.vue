@@ -99,17 +99,17 @@ export default {
           this.drawing();
         },
         'selection:created': e => {
-           if (e.target._objects) {
-              //多选删除
-              var etCount = e.target._objects.length;
-              for (var etindex = 0; etindex < etCount; etindex++) {
-                this.canvas.remove(e.target._objects[etindex]);
-              }
-            } else {
-              //单选删除
-              this.canvas.remove(e.target);
-            }
-            this.canvas.discardActiveObject(); //清楚选中框
+          //  if (e.target._objects) {
+          //     //多选删除
+          //     var etCount = e.target._objects.length;
+          //     for (var etindex = 0; etindex < etCount; etindex++) {
+          //       this.canvas.remove(e.target._objects[etindex]);
+          //     }
+          //   } else {
+          //     //单选删除
+          //     this.canvas.remove(e.target);
+          //   }
+            // this.canvas.discardActiveObject(); //清楚选中框
         },
       });
     },
@@ -189,7 +189,7 @@ export default {
         } else if (this.drawType == "remove") {
           this.canvas.selection = true;
           this.canvas.skipTargetFind = false;
-          this.canvas.selectable = true;
+          // this.canvas.selectable = true;
         } else {
           this.canvas.skipTargetFind = true; //画板元素不能被选中
           this.canvas.selection = false; //画板不显示选中

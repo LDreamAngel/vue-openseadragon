@@ -73,9 +73,9 @@
 <script>
 import axios from "axios";
 import OpenSeadragon from "openseadragon";
-// import "../js/openseadragon-paperjs-overlay";
-import "../js/openseadragon-canvas-overlay";
-// import "../js/openseadragon-smartScrollZoom";
+// import "@/utils/openseadragon-paperjs-overlay";
+import "@/utils/openseadragon-canvas-overlay";
+// import "@/utils/openseadragon-smartScrollZoom";
 import { VueCropper } from "vue-cropper";
 export default {
   name: "Openseadragon",

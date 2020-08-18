@@ -50,6 +50,14 @@ Vue.use(VueRouter)
           path: '/labelml/airglass',
           name: 'Airglass',
           component: () => import(/* webpackChunkName: "Labelml" */ '@/views/labelml/airglass.vue')
+        },{
+          path: '/labelml/label_fabric',
+          name: 'LabelFabric',
+          component: () => import(/* webpackChunkName: "Labelml" */ '@/views/labelml/label_fabric.vue')
+        },{
+          path: '/labelml/label_opsd',
+          name: 'LabelOpsd',
+          component: () => import(/* webpackChunkName: "Labelml" */ '@/views/labelml/label_opsd.vue')
         }
     ]
   }

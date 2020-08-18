@@ -9,6 +9,67 @@
 <script>
 import { fabric } from "fabric";
 
+var LabeledRect = fabric.util.createClass(fabric.Rect, {
+  type: "labeledRect",
+
+  initialize: function(options) {
+    options || (options = {});
+    this.callSuper("initialize", options);
+    this.set("label", options.label || "");
+    // this.set("score", options.score || 1.0);
+  },
+
+  toObject: function() {
+    return fabric.util.object.extend(this.callSuper("toObject"), {
+      label: this.get("label")
+      // score: this.get("score")
+    });
+  },
+
+  _render: function(ctx) {
+    this.callSuper("_render", ctx);
+    // let score = Math.round(this.score * 100) / 100;
+    // let text = this.label + " (" + score + ")";
+    // let text = this.label;
+    ctx.font = "14px Helvetica";
+    ctx.fillStyle = "#ffffff";
+    // ctx.fillText(this.label, -this.width / 2+10, -this.height / 2 + 20);
+    ctx.fillText(this.label, 0, 0);
+  }
+});
+
+var LabeledPath = fabric.util.createClass(fabric.Path, {
+  type: "labeledPath",
+
+  initialize: function(path,options) {
+    console.log(1111,options)
+    options || (options = {});
+    this.callSuper("initialize", path, options);
+    this.set("label", options.label || "");
+    // this.set("score", options.score || 1.0);
+  },
+
+  toObject: function() {
+    return fabric.util.object.extend(this.callSuper("toObject"), {
+      label: this.get("label")
+      // score: this.get("score")
+    });
+  },
+
+  _render: function(ctx) {
+    this.callSuper("_render", ctx);
+    // let score = Math.round(this.score * 100) / 100;
+    // let text = this.label + " (" + score + ")";
+    // let text = this.label;
+    console.log('label',this.label)
+    console.log(-this.width / 2+10, -this.height / 2 + 20)
+    ctx.font = "14px Helvetica";
+    ctx.fillStyle = "#000000";
+    // ctx.fillText(this.label, -this.width / 2+10, this.height / 2 + 20);
+    ctx.fillText(this.label, 0, 0);
+  }
+});
+
 export default {
   name: "FabricBox",
   data() {
@@ -92,8 +153,7 @@ export default {
       });
 
       // 自定义路线
-      var path = new fabric.Path("M 0 0 L 200 100 L 100 200 z");
-      path.set({
+      var path = new LabeledPath("M 0 0 L 200 100 L 100 200 z",{
         left: 120,
         top: 120,
         fill: "red",
@@ -137,6 +197,18 @@ export default {
         duration: 1000,
         easing: fabric.util.ease.easeOutBounce //easeInCubic，easeOutCubic，easeInElastic，easeOutElastic，easeInBounce和easeOutExpo。
       });
+
+      var aaa = new LabeledRect({
+        left: 300,
+        top: 300,
+        fill: "green",
+        width: 100,
+        height: 100
+      })
+      this.canvas.add(aaa)
+      aaa.set({label:'重绘标签'})
+      path.set({label:'重绘标签66666'})
+      
     }
   }
 };

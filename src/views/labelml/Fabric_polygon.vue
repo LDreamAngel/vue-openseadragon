@@ -2,7 +2,7 @@
   <div>
     <h1>Fabricjs之用Polyline画多边形</h1>
     <ul>
-      <li @click="doDrawing = true"><el-button size="mini">多边形</el-button></li>
+      <li><el-button size="mini" @click="startDraw()">多边形</el-button></li>
     </ul>
     <canvas id="canvas"></canvas>
   </div>
@@ -19,8 +19,7 @@ export default {
       drawWidth:2, //笔触宽度
       color:'rgb(211, 118, 146)', //画笔颜色
       fillColor:'rgba(0, 110, 255, 0.5)',
-
-      doDrawing:false, // 绘制状态
+      polygonMode:false, // 绘制状态
       pointArray:new Array(),
       lineArray:new Array(),
       activeLine:null,
@@ -46,25 +45,39 @@ export default {
       window.zoom = window.zoom ? window.zoom : 1;
       this.canvas.freeDrawingBrush.color = this.color; //设置自由绘颜色
       this.canvas.freeDrawingBrush.width = this.drawWidth;
+
+      fabric.Image.fromURL(require('@/assets/image-small.jpg'), function(img) {
+        let p2 =  canvas.height/img.height
+        canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas),{
+          left: (canvas.width/p2 - img.width)/2,
+            top: 0,
+        });
+        canvas.setZoom(p2) 
+      });
+
       //绑定画板事件
       this.fabricObjAddEvent()
+    },
+    startDraw() {
+        this.polygonMode = true;
+        this.pointArray = new Array();
+        this.lineArray = new Array();
+        this.activeLine;
+
     },
     fabricObjAddEvent() {
       this.canvas.on({
         "mouse:down": options => {
-          let xy = this.transformMouse(options.e.offsetX, options.e.offsetY);
-
+          console.log('options',options)
           // line多边形
-          if(this.doDrawing){
+          if(options.target && options.target.id == this.pointArray[0].id){
+            this.generatePolygon(this.pointArray);
+          }
+          if(this.polygonMode){
             this.addPoint(options);
-            if(options.target && options.target.id == this.pointArray[0].id){
-                this.generatePolygon(this.pointArray);
-            }
           }
         },
-        "mouse:up": options => {
-          let xy = this.transformMouse(options.e.offsetX, options.e.offsetY);
-
+        'mouse:move': options => {
           if(this.activeLine && this.activeLine.class == "line"){
                 var pointer = canvas.getPointer(options.e);
                 this.activeLine.set({ x2: pointer.x, y2: pointer.y });
@@ -80,15 +93,8 @@ export default {
                 this.canvas.renderAll();
             }
             this.canvas.renderAll();
-        },
-        'mouse:move': options => {},
-        'selection:created': e => {
-          this.doDrawing = false;
-        },
+        }
       });
-    },
-    transformMouse(mouseX, mouseY) {
-      return { x: mouseX / window.zoom, y: mouseY / window.zoom };
     },
     // 多边形
     drawPolygon(arr){
@@ -109,7 +115,7 @@ export default {
               id:new Date().getTime(),
               fill: this.color,
               stroke: this.color,
-              strokeWidth: 1,
+              strokeWidth: 5,
               class:'line', 
               originX:'center',
               originY:'center',
@@ -123,10 +129,10 @@ export default {
     drawCircle(point){
       return new fabric.Circle({
               id:new Date().getTime(),
-              radius: 5,
+              radius: 10,
               fill: '#ffffff',
               stroke: '#333333',
-              strokeWidth: 0.5,
+              strokeWidth: 5,
               left: (point.e.layerX/this.canvas.getZoom()),
               top: (point.e.layerY/this.canvas.getZoom()),
               selectable: false,
@@ -170,6 +176,7 @@ export default {
             this.activeShape = polygon;
             canvas.add(polygon);
         }
+
         this.activeLine = line;
 
         this.pointArray.push(circle);
@@ -198,17 +205,8 @@ export default {
 
         this.activeLine = null;
         this.activeShape = null;
-        this.doDrawing = false;
+        this.polygonMode = false;
         this.canvas.selection = true;
-    },
-    // 清除多余的组件
-    delCL(){
-      this.pointArray.forEach(point => {
-        this.canvas.remove(point);
-      });
-      this.lineArray.forEach(line => {
-        this.canvas.remove(line);
-      });
     }
   }
 };
@@ -220,7 +218,7 @@ export default {
 }
 ul{
   position: absolute;
-  z-index: 10;
+  z-index: 100;
 }
 ul li{
   width: 100px;

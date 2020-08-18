@@ -68,6 +68,16 @@ export default {
       this.canvas.setWidth(cWidth);
       this.canvas.setHeight(cheight);
 
+      fabric.Image.fromURL(require('@/assets/image-small.jpg'), function(img) {
+        let p2 =  canvas.height/img.height
+
+        canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas),{
+          left: (canvas.width/p2 - img.width)/2,
+            top: 0,
+        });
+        canvas.setZoom(p2) 
+      });
+
       window.canvas = this.canvas;
       window.zoom = window.zoom ? window.zoom : 1;
       this.canvas.freeDrawingBrush.color = this.color; //设置自由绘颜色
