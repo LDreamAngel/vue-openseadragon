@@ -20,9 +20,19 @@ Vue.use(VueRouter)
     component: () => import(/* webpackChunkName: "about" */ '@/views/Websocket.vue')
   },
   {
+    path: '/exportJSON',
+    name: 'ExportJSON',
+    component: () => import(/* webpackChunkName: "about" */ '@/views/exportJSON.vue')
+  },
+  {
     path: '/openseadragon',
     name: 'Openseadragon',
     component: () => import(/* webpackChunkName: "about" */ '@/views/Openseadragon.vue')
+  },
+  {
+    path: '/randomColor',
+    name: 'RandomColor',
+    component: () => import(/* webpackChunkName: "about" */ '@/views/randomColor.vue')
   },
   {
     path: '',
