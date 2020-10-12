@@ -145,6 +145,13 @@ export default {
         }
       });
 
+      // this.viewer.open({
+      //   tileSource: {
+      //     type: "image",
+      //     url: `http://192.168.1.16:10080/images/download/4dbbe559-2c24-4fba-9e13-8922797f7752`
+      //   }
+      // }); 
+
       var _this = this;
       var updateZoom = function() {
         var zoom = _this.viewer.viewport.getZoom(true);

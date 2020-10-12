@@ -125,6 +125,9 @@ export default {
         top: 50
       });
 
+      var point = new fabric.Point(500,500);
+      // this.canvas.add(point);
+
       // 添加图片一
       // var imgElement = document.getElementById('img');
       // var imgInstance = new fabric.Image(imgElement, {

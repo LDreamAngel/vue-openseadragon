@@ -1,11 +1,17 @@
 <template>
   <div id="app">
     <el-container style="height: 100%; border: 1px solid #eee">
-      <el-aside width="80px" style="height:100%;background-color: rgb(238, 241, 246)">
+      <el-aside
+        width="80px"
+        style="height: 100%; background-color: rgb(238, 241, 246)"
+      >
         <el-menu>
           <el-menu-item index="1">
             <template slot="title">
-              <i class="el-icon-folder-opened" title="我是鼠标悬停时显示的内容"></i>
+              <i
+                class="el-icon-folder-opened"
+                title="我是鼠标悬停时显示的内容"
+              ></i>
             </template>
           </el-menu-item>
           <el-menu-item index="2">
@@ -31,9 +37,19 @@
       </el-aside>
       <el-container>
         <el-main>
-          <section id="appMain" :style="{height: cheight+'px'}">
+          <section id="appMain" ref="appMain" :style="{ height: cheight + 'px' }">
             <div id="toolbarDiv"></div>
           </section>
+
+          <context-menu
+            class="right-menu"
+            :target="contextMenuTarget"
+            :show="contextMenuVisible"
+            @update:show="(show) => (contextMenuVisible = show)"
+          >
+            <a href="javascript:void(0);" @click="copyMsg">复制</a>
+            <a href="javascript:void(0);" @click="delTarget">删除</a>
+          </context-menu>
         </el-main>
       </el-container>
     </el-container>
@@ -43,7 +59,8 @@
 
 <script>
 // import RightPanel from "@/components/RightPanel";
-
+// 鼠标右键事件（局部注入）
+import { component as VueContextMenu } from '@xunlei/vue-context-menu'
 import OpenSeadragon from "openseadragon";
 import "@/utils/openseadragon-fabricjs-overlay";
 import { fabric } from "fabric";
@@ -63,23 +80,30 @@ var activeShape = false;
 export default {
   name: "Layout",
   // components: { RightPanel },
+  components: {
+    'context-menu': VueContextMenu
+  },
   data() {
     return {
+      // contextMenuTarget: document.body, //绑定的dom
+      contextMenuTarget: null, //绑定的dom
+      contextMenuVisible: false,
       viewer: null,
       overlay: null,
       options: {
         id: "appMain",
         constrainDuringPan: true,
         showNavigator: true,
-        toolbar: "toolbarDiv"
+        toolbar: "toolbarDiv",
         // debugMode : true, //开启调试模式
       },
       cheight: null,
-      scale: 1000
+      scale: 1000,
     };
   },
   mounted() {
     this.cheight = (window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight) - 44;
+    this.contextMenuTarget = this.$refs.appMain
     this.init();
   },
   methods: {
@@ -91,11 +115,11 @@ export default {
         tileSource: {
           type: "image",
           url: require("@/assets/image-small.jpg"),
-          minLevel: 0.125
-        }
+          minLevel: 0.125,
+        },
       });
 
-      console.log(this.viewer)
+      console.log(this.viewer);
 
       overlay = this.viewer.fabricjsOverlay({ scale: this.scale });
 
@@ -118,7 +142,6 @@ export default {
       arr = new Array();
       activeLine;
       activeShape;
-
     },
 
     getPoint() {
@@ -126,11 +149,16 @@ export default {
       // let sourceWidth = this.viewer.source.width;
       // let p = this.scale / sourceWidth;
 
-      this.viewer.addHandler("canvas-press", event=>{
+      this.viewer.addHandler("canvas-press", (event) => {
         var webPoint = event.position;
         var viewportPoint = this.viewer.viewport.pointFromPixel(webPoint);
-        var imagePoint = this.viewer.viewport.viewportToImageCoordinates(viewportPoint);
-        if ( arr.length > 1 && this.pointInsideCircle(imagePoint, arr[0], 50 * p)) {
+        var imagePoint = this.viewer.viewport.viewportToImageCoordinates(
+          viewportPoint
+        );
+        if (
+          arr.length > 1 &&
+          this.pointInsideCircle(imagePoint, arr[0], 50 * p)
+        ) {
           this.generatePolygon(pointArray);
         }
         if (polygonMode) {
@@ -140,7 +168,7 @@ export default {
 
       new OpenSeadragon.MouseTracker({
         element: "appMain",
-        moveHandler: event => {
+        moveHandler: (event) => {
           var webPoint = event.position;
           var viewportPoint = this.viewer.viewport.pointFromPixel(webPoint);
           var imagePoint = this.viewer.viewport.viewportToImageCoordinates(
@@ -149,21 +177,21 @@ export default {
           if (activeLine && activeLine.class == "line") {
             activeLine.set({
               x2: imagePoint.x * p,
-              y2: imagePoint.y * p
+              y2: imagePoint.y * p,
             });
 
             var points = activeShape.get("points");
             points[pointArray.length] = {
               x: imagePoint.x * p,
-              y: imagePoint.y * p
+              y: imagePoint.y * p,
             };
             activeShape.set({
-              points: points
+              points: points,
             });
             overlay.fabricCanvas().renderAll();
           }
           overlay.fabricCanvas().renderAll();
-        }
+        },
       });
     },
 
@@ -173,7 +201,7 @@ export default {
       // 画第一个圈设置不同的颜色
       if (pointArray.length == 0) {
         circle.set({
-          fill: "red"
+          fill: "red",
         });
       }
       //画线
@@ -186,7 +214,7 @@ export default {
         var points = activeShape.get("points");
         points.push({
           x: options.x * p,
-          y: options.y * p
+          y: options.y * p,
         });
         // 画多边形并获取当前的多边形
         var polygon = this.creatPolygon(points);
@@ -199,8 +227,8 @@ export default {
         var polyPoint = [
           {
             x: options.x * p,
-            y: options.y * p
-          }
+            y: options.y * p,
+          },
         ];
         var polygon = this.creatPolygon(polyPoint);
         activeShape = polygon;
@@ -218,14 +246,14 @@ export default {
     },
     generatePolygon(pointArray) {
       var points = new Array();
-      pointArray.forEach(point => {
+      pointArray.forEach((point) => {
         points.push({
           x: point.left,
-          y: point.top
+          y: point.top,
         });
         overlay.fabricCanvas().remove(point);
       });
-      lineArray.forEach(line => {
+      lineArray.forEach((line) => {
         overlay.fabricCanvas().remove(line);
       });
       overlay.fabricCanvas().remove(activeShape).remove(activeLine);
@@ -281,7 +309,7 @@ export default {
         // hasControls: false,
         originX: "center",
         originY: "center",
-        id: id
+        id: id,
       });
     },
     // 判断是否闭合成了一个多边形
@@ -293,12 +321,12 @@ export default {
     },
     // 删除选中的图像
     delTarget() {
-      console.log(1111)
-       overlay.fabricCanvas().on({
-        "object:moved": e => {
-          console.log('created:',e)
+      console.log(1111);
+      overlay.fabricCanvas().on({
+        "object:moved": (e) => {
+          console.log("created:", e);
           //  overlay.fabricCanvas().remove(e.target);
-        }
+        },
       });
       // if (this.delIndex) {
       //   this.canvas.remove(this.delIndex);
@@ -306,7 +334,10 @@ export default {
       //   this.$message.warning("请先选择要删除的图像");
       // }
     },
-  }
+    copyMsg(){
+
+    }
+  },
 };
 </script>
 
@@ -339,5 +370,44 @@ body,
 }
 #toolbarDiv {
   display: none;
+}
+
+.right-menu {
+  border: 1px solid #eee;
+  box-shadow: 0 0.5em 1em 0 rgba(0, 0, 0, 0.1);
+  border-radius: 1px;
+  display: block;
+  font-family: Microsoft Yahei, Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  position: fixed;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+  z-index: 999;
+  display: none;
+  a {
+    padding: 2px 15px;
+
+    // width: 120px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    display: block;
+    color: #1a1a1a;
+    font-size: 14px;
+    text-decoration: none;
+  }
+  user agent stylesheet a:-webkit-any-link {
+    color: -webkit-link;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  a:hover {
+    background: #42b983;
+    color: #fff;
+  }
 }
 </style>

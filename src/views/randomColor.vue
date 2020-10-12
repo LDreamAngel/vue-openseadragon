@@ -4,14 +4,14 @@
       <div class="box" v-for="item in rgbArray" :style="item.style" :key="item[0]"></div>
       <hr />
     </div>
-    <!-- <div class="content">
+    <div class="content">
       <div class="box" v-for="(item,index) in colorArray" :style="item" :key="index"></div>
       <hr />
     </div>
     <div class="content">
       <div class="box" v-for="(item,index) in colorArray1" :style="item" :key="index"></div>
       <hr />
-    </div> -->
+    </div>
     <div class="content">
       <div class="box" v-for="(item,index) in colorArray2" :style="item" :key="index"></div>
       <hr />
@@ -39,6 +39,7 @@ export default {
     this.bg1();
     this.bg2();
     this.bg3();
+    console.log(111,this.fun())
   },
   mounted() {
     console.log("1");
@@ -167,6 +168,16 @@ export default {
       }
       return this.colorArray3;
     },
+    fun(){
+      var r = Math.floor(Math.random() * 256);
+      var g = Math.floor(Math.random() * 256);
+      var b = Math.floor(Math.random() * 256);
+    
+       return {
+            fill_color: `rgba(${r}, ${g}, ${b}, 0.3)`,
+            line_color: `rgb(${r}, ${g}, ${b})`
+          }
+    }
   },
 };
 </script>
