@@ -15,7 +15,7 @@
     "fabric": "4.0.0-beta.11",
     "file-saver": "^2.0.2",
     "openseadragon": "^2.4.2",
-    "paper": "^0.9.25",
+    "paper": "^0.12.17",
     "vue": "^2.6.11",
     "vue-cropper": "^0.5.2",
     "vue-router": "^3.1.6"
